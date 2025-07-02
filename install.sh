@@ -267,7 +267,7 @@ Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -type client -l :1010 -s $SERVER_IP -tcp_gz 1024 -sock5 1
+ExecStart=$INSTALL_PATH -type client -l :1010 -s $SERVER_IP -sock5 1
 Restart=always
 RestartSec=5
 
