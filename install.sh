@@ -346,7 +346,7 @@ Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -config config.json
+ExecStart=$INSTALL_PATH -config $CONFIG_PATH
 Restart=always
 RestartSec=5
 
@@ -373,7 +373,7 @@ Description=ICMPTunnel Server Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -config config.json
+ExecStart=$INSTALL_PATH -config $CONFIG_PATH
 Restart=always
 RestartSec=5
 
