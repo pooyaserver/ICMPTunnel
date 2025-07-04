@@ -93,6 +93,8 @@ q-icmp
 + 🪟 Windows 10/11 (both 64-bit and 32-bit)
 + 🍎 macOS (Intel & Apple Silicon)
 
+---
+
 # Ensure ICMP (ping) is allowed on both sides (no firewall blocks)
 # Root is NOT required in most modern systems
 # No ports need to be opened manually — it works via ICMP!
