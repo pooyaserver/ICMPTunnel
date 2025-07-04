@@ -134,7 +134,7 @@ SERVICE=""
 # This updater script will always try to update from GitHub.
 URL=\$(curl -s \$GITHUB_API | grep browser_download_url | grep "\$BINARY_NAME" | cut -d '"' -f 4)
 TMP_BIN="/tmp/\$BINARY_NAME.new"
-curl -sL "\$URL" -o "\$TMP_BIN"
+curl -# -L "\$URL" -o "\$TMP_BIN"
 chmod +x "\$TMP_BIN"
 if ! cmp -s "\$TMP_BIN" "\$INSTALL_PATH"; then
   echo "Updating \$BINARY_NAME..."
@@ -143,6 +143,21 @@ if ! cmp -s "\$TMP_BIN" "\$INSTALL_PATH"; then
 else
   rm -f "\$TMP_BIN"
 fi
+
+echo -e "\n🔁 Updating install.sh..."
+
+INSTALLER_URL="https://raw.githubusercontent.com/Qteam-official/ICMPTunnel/main/install.sh"
+INSTALLER_PATH="./install.sh"
+
+rm -f "$INSTALLER_PATH"
+
+curl -# -L "$INSTALLER_URL" -o "$INSTALLER_PATH"
+
+chmod +x "$INSTALLER_PATH"
+
+echo -e "✅ install.sh updated. Executing it now...\n"
+
+bash "$INSTALLER_PATH"
 EOF
   chmod +x /usr/local/bin/icmptunnel-updater.sh
 
@@ -260,14 +275,23 @@ EOF
       fi
 
 
-    
+    cat <<EOF > config.json
+{
+  "type": "client",
+  "listen_port_socks": "1010",
+  "server": "\$SERVER_IP",
+  "timeout": 60,
+  "block_country": "IR",
+  "key": 20201204
+}
+EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_CLIENT"
 [Unit]
 Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -type client -l :1010 -s $SERVER_IP -sock5 1
+ExecStart=$INSTALL_PATH -config config.json
 Restart=always
 RestartSec=5
 
@@ -277,13 +301,23 @@ EOF
     systemctl enable $SERVICE_CLIENT
     systemctl start $SERVICE_CLIENT
   else
+    cat <<EOF > config.json
+{
+  "type": "server",
+  "listen_port_socks": "1010",
+  "server": "",
+  "timeout": 60,
+  "block_country": "IR",
+  "key": 20201204
+}
+EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_SERVER"
 [Unit]
 Description=ICMPTunnel Server Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -type server
+ExecStart=$INSTALL_PATH -config config.json
 Restart=always
 RestartSec=5
 
@@ -303,23 +337,10 @@ Type=oneshot
 ExecStart=/usr/local/bin/icmptunnel-updater.sh
 EOF
 
-  cat <<EOF > /etc/systemd/system/icmptunnel-updater.timer
-[Unit]
-Description=Run ICMPTunnel updater hourly
 
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=1h
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
 
   systemctl daemon-reexec
   systemctl daemon-reload
-  systemctl enable icmptunnel-updater.timer
-  systemctl start icmptunnel-updater.timer
   clear
   echo -e "${GREEN}✅ Installation complete!${NC}"
   echo -e "${CYAN}🛠 You can manage with command: ${YELLOW}q-icmp${NC}"
