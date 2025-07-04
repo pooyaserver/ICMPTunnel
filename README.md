@@ -77,22 +77,21 @@ q-icmp
 
 ## **🔐 Requirements 👇🏻**
 
-# ✅ Supported Platforms ( linux/amd64 ) :
-  + 🐧 Ubuntu 18.04, 20.04, 22.04 and newer
-  + 🐧 Debian 10, 11, 12+
-  + 🐧 Kali Linux
-  + 🐧 Linux Mint
-  + 🐧 Fedora
-  + 🐧 CentOS / AlmaLinux / Rocky
-  + 🐧 Arch Linux / Manjaro
-  + 🐧 openSUSE
-  + 🐧 Pop!_OS, Zorin OS, and most other modern distros
+# ✅ Supported Platforms:
 
-# ⚠️ Not supported on:
-  + ❌ 32-bit Linux systems (i386)
-  + ❌ ARM devices (like Raspberry Pi)
-  + ❌ macOS or Windows
-  + ℹ️ Support for other architectures (e.g. arm64, arm, windows) may be added in future releases.
++ Linux (amd64, arm64, arm, 386)
++ Windows (amd64, 386)
++ macOS (darwin-amd64, darwin-arm64)
+
+# ✅ Tested on :
+
++ 🐧 Ubuntu 18.04, 20.04, 22.04+
++ 🐧 Debian 10/11/12+
++ 🐧 Kali, Mint, Fedora, CentOS, AlmaLinux, Rocky
++ 🐧 Arch, Manjaro, openSUSE
++ 🐧 Pop!_OS, Zorin OS, and other modern distros
++ 🪟 Windows 10/11 (both 64-bit and 32-bit)
++ 🍎 macOS (Intel & Apple Silicon)
 
 # Ensure ICMP (ping) is allowed on both sides (no firewall blocks)
 # Root is NOT required in most modern systems
