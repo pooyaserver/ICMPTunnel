@@ -18,6 +18,9 @@ REPO="Qteam-official/ICMPTunnel"
 GITHUB_API="https://api.github.com/repos/$REPO/releases/latest"
 BINARY_NAME="ICMPTunnel"
 INSTALL_PATH="/usr/local/bin/$BINARY_NAME"
+GEOIP_COUNTRY_PATH_DL="https://raw.githubusercontent.com/Qteam-official/ICMPTunnel/main/geoip/geoip-country.mmdb"
+GEOIP_COUNTRY_PATH="/usr/local/bin/geoip-country.mmdb"
+CONFIG_PATH="/usr/local/bin/config.json"
 SERVICE_CLIENT="icmptunnel-client.service"
 SERVICE_SERVER="icmptunnel-server.service"
 MODE_FILE="/opt/icmptunnel/mode.conf"
@@ -85,7 +88,30 @@ function install_icmp() {
 
   if [[ "$INSTALL_MODE" == "online" ]]; then
     echo -e "${CYAN}📦 Downloading latest release from GitHub...${NC}"
-    URL=$(curl -s $GITHUB_API | grep browser_download_url | grep "$BINARY_NAME" | cut -d '"' -f 4)
+    OS=$(uname | tr '[:upper:]' '[:lower:]')
+    ARCH=$(uname -m)
+
+    if [[ "$ARCH" == "x86_64" ]]; then
+      ARCH="amd64"
+    elif [[ "$ARCH" == "i686" || "$ARCH" == "i386" ]]; then
+      ARCH="386"
+    elif [[ "$ARCH" == "aarch64" ]]; then
+      ARCH="arm64"
+    elif [[ "$ARCH" == "armv7l" ]]; then
+      ARCH="arm"
+    fi
+
+    if [[ "$OS" == "darwin" && "$ARCH" == "x86_64" ]]; then
+      ARCH="amd64"
+    fi
+
+    TARGET="ICMPTunnel-$OS-$ARCH"
+    URL=$(curl -s "$GITHUB_API" | grep browser_download_url | grep "$TARGET" | cut -d '"' -f 4)
+
+
+    echo -e "${CYAN}📦 Downloading Geoip from GitHub...${NC}"
+    curl -L -# -o "$GEOIP_COUNTRY_PATH" "$GEOIP_COUNTRY_PATH_DL"
+    echo -e "${GREEN}✅ Geoip Downloaded${NC}"
 
     if [[ -z "$URL" ]]; then
       echo -e "${RED}❌ Failed to fetch download URL. Exiting.${NC}"
@@ -101,6 +127,8 @@ function install_icmp() {
   elif [[ "$INSTALL_MODE" == "offline" ]]; then
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
     LOCAL_BIN="$SCRIPT_DIR/$BINARY_NAME"
+    LOCAL_GEOIP="$SCRIPT_DIR/geoip-country.mmdb"
+    LOCAL_CONFIG="$SCRIPT_DIR/config.json"
     echo -e "${CYAN}🔍 Checking for local file: $LOCAL_BIN${NC}"
     if [[ -f "$LOCAL_BIN" ]]; then
       echo -e "${GREEN}✅ Local binary found. Installing...${NC}"
@@ -110,6 +138,24 @@ function install_icmp() {
       echo -e "${RED}❌ Local binary '$BINARY_NAME' not found next to the script. Please place it there or choose online installation. Exiting.${NC}"
       exit 1
     fi
+    if [[ -f "$LOCAL_GEOIP" ]]; then
+      echo -e "${GREEN}✅ Local binary found. Installing...${NC}"
+      chmod +x "$LOCAL_GEOIP"
+      cp "$LOCAL_GEOIP" "$GEOIP_COUNTRY_PATH"
+    else
+      echo -e "${RED}❌ Local binary 'geoip-country.mmdb' not found next to the script. Please place it there or choose online installation. Exiting.${NC}"
+      exit 1
+    fi
+
+    if [[ -f "$LOCAL_CONFIG" ]]; then
+      echo -e "${GREEN}✅ Local Config/json found. Installing...${NC}"
+      chmod +x "$LOCAL_CONFIG"
+      cp "$LOCAL_CONFIG" "$CONFIG_PATH"
+    else
+      echo -e "${RED}❌ Local 'config.json' not found next to the script. Please place it there or choose online installation. Exiting.${NC}"
+      exit 1
+    fi
+
   fi
 
   cat <<EOF > /usr/local/bin/icmptunnel-updater.sh
@@ -131,10 +177,28 @@ SERVICE=""
 [[ "\$MODE" == "1" ]] && SERVICE="$SERVICE_CLIENT"
 [[ "\$MODE" == "2" ]] && SERVICE="$SERVICE_SERVER"
 
-# This updater script will always try to update from GitHub.
-URL=\$(curl -s \$GITHUB_API | grep browser_download_url | grep "\$BINARY_NAME" | cut -d '"' -f 4)
+OS=$(uname | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+
+if [[ "\$ARCH" == "x86_64" ]]; then
+  ARCH="amd64"
+elif [[ "\$ARCH" == "i686" || "\$ARCH" == "i386" ]]; then
+  ARCH="386"
+elif [[ "\$ARCH" == "aarch64" ]]; then
+  ARCH="arm64"
+elif [[ "\$ARCH" == "armv7l" ]]; then
+  ARCH="arm"
+fi
+
+if [[ "\$OS" == "darwin" && "\$ARCH" == "x86_64" ]]; then
+  ARCH="amd64"
+fi
+
+BINARY_NAME="ICMPTunnel-\${OS}-\${ARCH}"
+TARGET="ICMPTunnel-\$OS-\$ARCH"
+URL=\$(curl -s "\$GITHUB_API" | grep browser_download_url | grep "\$TARGET" | cut -d '"' -f 4)
 TMP_BIN="/tmp/\$BINARY_NAME.new"
-curl -sL "\$URL" -o "\$TMP_BIN"
+curl -# -L "\$URL" -o "\$TMP_BIN"
 chmod +x "\$TMP_BIN"
 if ! cmp -s "\$TMP_BIN" "\$INSTALL_PATH"; then
   echo "Updating \$BINARY_NAME..."
@@ -143,6 +207,11 @@ if ! cmp -s "\$TMP_BIN" "\$INSTALL_PATH"; then
 else
   rm -f "\$TMP_BIN"
 fi
+
+echo -e "\n🔁 Updating install.sh..."
+
+bash <(curl -Ls https://raw.githubusercontent.com/Qteam-official/ICMPTunnel/main/install.sh)
+
 EOF
   chmod +x /usr/local/bin/icmptunnel-updater.sh
 
@@ -192,7 +261,7 @@ while true; do
   echo
   echo -e "\${CYAN}"
   echo "╭──────────────────────────────────────────"
-  echo "│        ⚙️  ICMPTunnel Control Panel      "
+  echo "│        ⚙️  ICMPTunnel Control Panel  ( \${GREEN}\${ACTIVE_SERVICE}\${NC} )    "
   echo -e "│        ⚙️  Status : \${GREEN}\${statusservice}\${NC}"
   echo "╰──────────────────────────────────────────"
   echo -e "\${NC}"
@@ -260,14 +329,24 @@ EOF
       fi
 
 
-    
+    cat <<EOF > /usr/local/bin/config.json
+{
+  "type": "client",
+  "listen_port_socks": "1010",
+  "server": "$SERVER_IP",
+  "timeout": 60,
+  "block_country": "IR",
+  "dns":"8.8.8.8",
+  "key": 20201204
+}
+EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_CLIENT"
 [Unit]
 Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -type client -l :1010 -s $SERVER_IP -sock5 1
+ExecStart=$INSTALL_PATH -config config.json
 Restart=always
 RestartSec=5
 
@@ -277,13 +356,24 @@ EOF
     systemctl enable $SERVICE_CLIENT
     systemctl start $SERVICE_CLIENT
   else
+    cat <<EOF > /usr/local/bin/config.json
+{
+  "type": "server",
+  "listen_port_socks": "1010",
+  "server": "",
+  "timeout": 60,
+  "block_country": "IR",
+  "dns":"8.8.8.8",
+  "key": 20201204
+}
+EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_SERVER"
 [Unit]
 Description=ICMPTunnel Server Mode
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_PATH -type server
+ExecStart=$INSTALL_PATH -config config.json
 Restart=always
 RestartSec=5
 
@@ -303,23 +393,10 @@ Type=oneshot
 ExecStart=/usr/local/bin/icmptunnel-updater.sh
 EOF
 
-  cat <<EOF > /etc/systemd/system/icmptunnel-updater.timer
-[Unit]
-Description=Run ICMPTunnel updater hourly
 
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=1h
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
 
   systemctl daemon-reexec
   systemctl daemon-reload
-  systemctl enable icmptunnel-updater.timer
-  systemctl start icmptunnel-updater.timer
   clear
   echo -e "${GREEN}✅ Installation complete!${NC}"
   echo -e "${CYAN}🛠 You can manage with command: ${YELLOW}q-icmp${NC}"
