@@ -261,7 +261,7 @@ while true; do
   echo
   echo -e "\${CYAN}"
   echo "╭──────────────────────────────────────────"
-  echo "│        ⚙️  ICMPTunnel Control Panel  ( \${GREEN}\${ACTIVE_SERVICE}\${NC} )    "
+  echo -e"│        ⚙️  ICMPTunnel Control Panel  ( \${GREEN}\${ACTIVE_SERVICE}\${NC} )    "
   echo -e "│        ⚙️  Status : \${GREEN}\${statusservice}\${NC}"
   echo "╰──────────────────────────────────────────"
   echo -e "\${NC}"
