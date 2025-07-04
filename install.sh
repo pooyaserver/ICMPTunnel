@@ -281,7 +281,11 @@ while true; do
     1) systemctl start \$ACTIVE_SERVICE || true ;;
     2) systemctl stop \$ACTIVE_SERVICE || true ;;
     3) systemctl restart \$ACTIVE_SERVICE || true ;;
-    4) systemctl status \$ACTIVE_SERVICE || true ;;
+    4) echo -e "${CYAN}Showing service status...${NC}"
+  systemctl status \$ACTIVE_SERVICE
+  echo
+  read -p "🔁 Press enter to return to menu..."
+  ;;
     5) /usr/local/bin/icmptunnel-updater.sh ;;
     6)
       echo -e "\${RED}⚠️ This will remove everything related to ICMPTunnel!\${NC}"
