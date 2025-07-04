@@ -75,7 +75,6 @@ q-icmp
 
 ---
 
-## **🔐 Requirements 👇🏻**
 
 # ✅ Supported Platforms:
 
