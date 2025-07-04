@@ -341,17 +341,23 @@ EOF
 }
 EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_CLIENT"
+
 [Unit]
 Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
 ExecStart=$INSTALL_PATH -config $CONFIG_PATH
+WorkingDirectory=/usr/local/bin
+User=root
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
+
 EOF
     systemctl enable $SERVICE_CLIENT
     systemctl start $SERVICE_CLIENT
@@ -369,13 +375,17 @@ EOF
 EOF
     cat <<EOF > "/etc/systemd/system/$SERVICE_SERVER"
 [Unit]
-Description=ICMPTunnel Server Mode
+Description=ICMPTunnel Client Mode
 After=network.target
 
 [Service]
 ExecStart=$INSTALL_PATH -config $CONFIG_PATH
+WorkingDirectory=/usr/local/bin
+User=root
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
