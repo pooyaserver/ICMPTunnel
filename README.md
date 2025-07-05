@@ -35,7 +35,7 @@ It demonstrates tunneling over the ICMP protocol (commonly used by ping).
 + 1 - Just run this command to download and start :
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/Qteam-official/ICMPTunnel/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/pooyaserver/ICMPTunnel/main/install.sh)
 ```
 
 + 2 - Then type
